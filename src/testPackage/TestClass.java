@@ -1,6 +1,9 @@
 package testPackage;
 
+import java.io.IOException;
+
 import logger.*;
+//import java.io.PrintStream;
 
 public class TestClass {
 
@@ -8,13 +11,11 @@ public class TestClass {
 	private static LogManager logger;
 	public static void main(String[] args) {
 		logger = LogManager.getInstance();
-
+		//PrintStream printStream =new PrintStream(System.out);
 		LogHandler consoleHandler = new LogHandlerConsole();
-		LogHandler fileHandler=new LogHandlerFileOutput();
 		
 		
 		logger.addLogHandlerToHook(consoleHandler);
-		logger.setLogHandler(consoleHandler);
 
 		int logInstance1, logInstance2, logInstance3;
 		logInstance1 = logger.createLogInstance();
@@ -51,7 +52,10 @@ public class TestClass {
 		logger.createLog("FOR DELETE3", LogLevels.INFO);
 
 		logger.printOut(new int[] {logInstance1,logInstance2,logInstance3});
-
+		Exception r = new RuntimeException("Message ");
+		IOException e =new IOException("Test Message" , r);
+		e.printStackTrace();
+		
 	}
 	
 	private static void testMethod1() {
