@@ -1,6 +1,7 @@
 package logger;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class LogInstance {
@@ -11,19 +12,21 @@ public class LogInstance {
 		this.listId = index;
 	}
 
-	public void clearList() {
+	public void clearInstance() {
 		this.logList.clear();
 	}
 
-	protected void addToLogList(LogObject data) {
+	protected void addToInstance(LogObject data) {
 		this.logList.add(data);
 	}
 
-	protected void removeLog(int count) {
-		if (logList.size() - count >= 0)
-			this.logList = logList.subList(0, logList.size() - count);
-		else
-			clearList();
+	public void removeFromBottom(int count) {
+		Iterator<LogObject> itr = logList.iterator();
+		while (itr.hasNext() && count > 0) {
+			itr.next();
+			itr.remove();
+			count--;
+		}
 	}
 
 	protected void getLogs(StringBuilder stringBuilder, LogFormatter formatter, int count) {

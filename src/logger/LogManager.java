@@ -10,30 +10,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
-
 public class LogManager {
-	protected static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:MM:ss");
-	protected static final String lineSeparator;
-	public final boolean DEBUG = true;
 	private static LogManager instance;
+	public final boolean DEBUG;
 
 	static {
 		lineSeparator = System.lineSeparator();
-		instance = new LogManager();
+		dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:MM:ss");
 	}
 
-	public static LogManager getInstance() {
+	public static LogManager getInstance(boolean mode) {
+		if (null == instance) { return new LogManager(mode); }
 		return instance;
 	}
 
-	private LogManager() {
+	private LogManager(boolean mode) {
+		this.DEBUG = mode;
 	}
 
+
+	protected static SimpleDateFormat dateFormat;
+	protected static final String lineSeparator;
+	
 	private LogHandler activeLogHandler;
 	private LogInstance activeInstance;
+	private int activeLoggingLevel = -1;
+	
 	private List<LogInstance> logInstances = new ArrayList<LogInstance>();
 	private List<LogHandler> logHandlers = new ArrayList<LogHandler>();
-	private int activeLoggingLevel = -1;
 
 	public void addLogInstance(LogInstance newInstance) {
 		if (null != newInstance) {
@@ -74,7 +78,7 @@ public class LogManager {
 		Date date = new Date();
 		LogObject temp = new LogObject(logText, callerClassName, callerMethodName, logLevel, dateFormat.format(date));
 		for (int instanceTemp : instances) {
-			logInstances.get(instanceTemp).addToLogList(temp);
+			logInstances.get(instanceTemp).addToInstance(temp);
 		}
 	}
 
@@ -134,7 +138,7 @@ public class LogManager {
 	// FLUSH LOG INSTANCE////////////////////////////////////////
 	public void flushLogInstances(int[] indexes) {
 		for (int temp : indexes) {
-			logInstances.get(temp).clearList();
+			logInstances.get(temp).clearInstance();
 		}
 	}
 
@@ -151,7 +155,7 @@ public class LogManager {
 	public void removeLog(int count, int[] instances) {
 		for (int temp : instances) {
 			if (count == -1)
-				logInstances.get(temp).clearList();
+				logInstances.get(temp).clearInstance();
 			else
 				logInstances.get(temp).removeLog(count);
 		}
@@ -194,13 +198,13 @@ public class LogManager {
 	public void setDateFormat(SimpleDateFormat newFormat) {
 		dateFormat = newFormat;
 	}
-	
+
 	public int getActiveLoggingLevel() {
 		return this.activeLoggingLevel;
 	}
-	
+
 	public void setActiveLoggingLevel(int activeLoggingLevel) {
-		this.activeLoggingLevel=activeLoggingLevel;
+		this.activeLoggingLevel = activeLoggingLevel;
 	}
 	// GETTER SETTERS////////////////////////////////////////////
 }
