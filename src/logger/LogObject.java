@@ -1,32 +1,24 @@
 package logger;
 
-import java.text.DateFormat;
-import java.util.Date;
-
 public class LogObject {
 	private String message;
 	private String senderClass;
 	private String senderMethod;
 	private String level;
-	private Date date;
+	private String date;
 
-	protected LogObject(String message, String senderClass, String senderMethod, int level) {
+	protected LogObject(String message, String senderClass, String senderMethod, int level,String date) {
 		if (level < 1 || level > 6) throw new IllegalArgumentException("Unknown log level");
-		this.date = new Date();
-		this.message = message;
-		this.senderClass = senderClass;
-		this.senderMethod = senderMethod;
 		if (level == LogLevels.TRACE) this.level = "TRACE";
 		if (level == LogLevels.DEBUG) this.level = "DEBUG";
 		if (level == LogLevels.INFO) this.level = "INFO";
 		if (level == LogLevels.WARN) this.level = "WARN";
 		if (level == LogLevels.ERROR) this.level = "ERROR";
 		if (level == LogLevels.FATAL) this.level = "FATAL";
-	}
-
-	protected String returnFormattedLog(DateFormat dateFormat) {
-		return level + " -> " + dateFormat.format(date) + " -> " + senderClass + " -> " + senderMethod + " -> "
-				+ message;
+		this.date = date;
+		this.message = message;
+		this.senderMethod = senderMethod;
+		this.senderClass = senderClass;
 	}
 
 	protected String getMessage() {
@@ -34,7 +26,7 @@ public class LogObject {
 	}
 
 	protected String getSenderClass() {
-		return this.senderMethod;
+		return this.senderClass;
 	}
 
 	protected String getSenderMethod() {
@@ -45,7 +37,7 @@ public class LogObject {
 		return this.level;
 	}
 
-	protected Date getDate() {
+	protected String getDate() {
 		return this.date;
 	}
 
