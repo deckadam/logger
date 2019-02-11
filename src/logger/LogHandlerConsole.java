@@ -1,43 +1,30 @@
 package logger;
 
 import java.util.List;
+import java.io.OutputStream;
 
 public class LogHandlerConsole extends LogHandler {
 
+	public LogHandlerConsole(OutputStream os) {
+		setHandlerWriteStream(os);
+	}
+	
 	@Override
-	public boolean printOutLogs(List<LogInstance> logInstance, int count) {
-		StringBuilder outputString = new StringBuilder();
-		List<LogObject> temp;
-		for (LogInstance logList : logInstance) {
-			outputString.setLength(0);
-			if (count != -1) {
-				int size = logList.getLogList().size();
-				if (logList.getLogList().size() - count >= 0)
-					temp = logList.getLogList().subList(size - count, size);
-				else
-					temp = logList.getLogList();
-			} else
-				temp = logList.getLogList();
-			try {
-				for (LogObject instance : temp) {
-					outputString.append(instance.returnFormattedLog(getDateFormat()) + "\n");
-				}
-				System.out.println(outputString);
-			} catch (Exception e) {
-				useAlternativeHandler(logInstance, count);
-				return false;
+	protected boolean printOutLogs(List<LogInstance> logInstances, int count) {
+		StringBuilder outputBuilder = new StringBuilder();
+		try {
+			for (LogInstance tempInstance : logInstances) {
+				tempInstance.getLogs(outputBuilder, getLogFormatter(), count);
+				outputBuilder.append(LogManager.lineSeparator);
 			}
+			getHandlerWriteStream().write(outputBuilder.toString().getBytes());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			useAlternativeHandler(logInstances, count, getLogFormatter());
+
 		}
 		return true;
 	}
 
-	private boolean checkAlternativeHandler() {
-		return getAlternativeHandler() != null;
-	}
-
-	private void useAlternativeHandler(List<LogInstance> logInstance, int count) {
-		if (getUseAlternativeHandlerOnError() && checkAlternativeHandler()) {
-			getAlternativeHandler().printOutLogs(logInstance, count);
-		}
-	}
 }
