@@ -1,13 +1,12 @@
 package logger;
 
-import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public abstract class LogHandler {
-	private OutputStream handlerWriteStream;
 	private LogHandler alterativeHandler;
 	private boolean useAlternativeHandlerOnError = false;
-	private LogFormatter formatter;
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:MM:ss");
 
 	public void setUseAlternativeHandlerOnError(boolean value) {
 		this.useAlternativeHandlerOnError = value;
@@ -15,6 +14,14 @@ public abstract class LogHandler {
 
 	public boolean getUseAlternativeHandlerOnError() {
 		return useAlternativeHandlerOnError;
+	}
+
+	public SimpleDateFormat getDateFormat() {
+		return dateFormat;
+	}
+
+	public void setDateFormat(SimpleDateFormat dateFormat) {
+		this.dateFormat = dateFormat;
 	}
 
 	public LogHandler getAlternativeHandler() {
@@ -25,30 +32,5 @@ public abstract class LogHandler {
 		this.alterativeHandler = alternativeHandler;
 	}
 
-	public LogFormatter getLogFormatter() {
-		return this.formatter;
-	}
-
-	public void setLogFormatter(LogFormatter formatter) {
-		this.formatter = formatter;
-	}
-
-	public OutputStream getHandlerWriteStream() {
-		return this.handlerWriteStream;
-	}
-
-	public void setHandlerWriteStream(OutputStream newStream) {
-		this.handlerWriteStream = newStream;
-	}
-
-	protected void useAlternativeHandler(List<LogInstance> logInstance, int count, LogFormatter formatter) {
-		if (getUseAlternativeHandlerOnError() && getAlternativeHandler() != null) {
-			getAlternativeHandler().printOutLogs(logInstance, count);
-		}
-		else {
-			System.out.println("Alternative handler not available");
-		}
-	}
-	
-	protected abstract boolean printOutLogs(List<LogInstance> logInstances, int count);
+	public abstract boolean printOutLogs(List<LogInstance> logInstance, int count);
 }

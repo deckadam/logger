@@ -5,24 +5,17 @@ import logger.LogObject;
 import logger.LogInstance;
 
 import java.util.List;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-
 
 public class LogManager {
-	protected static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:MM:ss");
-	protected static final String lineSeparator;
-	public final boolean DEBUG = true;
+	public static final boolean DEBUG = true;
 	private static LogManager instance;
 
-	static {
-		lineSeparator = System.lineSeparator();
-		instance = new LogManager();
-	}
-
 	public static LogManager getInstance() {
+		if (instance == null) {
+			instance = new LogManager();
+		}
 		return instance;
 	}
 
@@ -33,16 +26,17 @@ public class LogManager {
 	private LogInstance activeInstance;
 	private List<LogInstance> logInstances = new ArrayList<LogInstance>();
 	private List<LogHandler> logHandlers = new ArrayList<LogHandler>();
-	private int activeLoggingLevel = -1;
+	private int instanceCounter = -1;
+	private int lastiLogLevel = -1;
 
-	public void addLogInstance(LogInstance newInstance) {
-		if (null != newInstance) {
-			logInstances.add(newInstance);
-			if (activeInstance == null) activeInstance = newInstance;
-		}
+	public int createLogInstance() {
+		LogInstance newInstance = new LogInstance(++instanceCounter);
+		logInstances.add(newInstance);
+		if (activeInstance == null) activeInstance = newInstance;
+		return newInstance.getId();
 	}
 
-	// HANDLER HOOK///////////////////////////////////////////////
+	//HANDLER HOOK///////////////////////////////////////////////
 	public void addLogHandlerToHook(LogHandler logHandler) {
 		if (activeLogHandler == null) this.activeLogHandler = logHandler;
 		logHandlers.add(logHandler);
@@ -63,18 +57,17 @@ public class LogManager {
 		}
 		return false;
 	}
-	// HANDLER HOOK///////////////////////////////////////////////
+	//HANDLER HOOK///////////////////////////////////////////////
 
 	// CREATE LOG////////////////////////////////////////////////
 	public void createLog(String logText, int logLevel, int[] instances) {
-		this.activeLoggingLevel = logLevel;
+		this.lastiLogLevel = logLevel;
 		StackTraceElement[] currentStack = Thread.currentThread().getStackTrace();
 		String callerClassName = currentStack[currentStack.length - 1].getClassName();
 		String callerMethodName = currentStack[3].getMethodName();
-		Date date = new Date();
-		LogObject temp = new LogObject(logText, callerClassName, callerMethodName, logLevel, dateFormat.format(date));
+		LogObject temp = new LogObject(logText, callerClassName, callerMethodName, logLevel);
 		for (int instanceTemp : instances) {
-			logInstances.get(instanceTemp).addToLogList(temp);
+			logInstances.get(instanceTemp).getLogList().add(temp);
 		}
 	}
 
@@ -83,13 +76,13 @@ public class LogManager {
 	}
 
 	public void createLog(String logText) {
-		createLog(logText, activeLoggingLevel, new int[] { activeInstance.getId() });
+		createLog(logText, lastiLogLevel, new int[] { activeInstance.getId() });
 	}
 	// CREATE LOG////////////////////////////////////////////////
 
 	// PRINT OUT/////////////////////////////////////////////////
 	public boolean[] printOut(List<LogHandler> handlerInstances, int[] logInstances, int count) {
-		boolean[] isComplete = new boolean[handlerInstances.size()];
+		boolean[] isComplete = new boolean[handlerInstances.size() * logInstances.length];
 		int handlerCounter = 0;
 		List<LogInstance> tempList = new ArrayList<LogInstance>();
 		for (int tempInstance : logInstances) {
@@ -97,6 +90,7 @@ public class LogManager {
 		}
 		for (LogHandler tempHandler : handlerInstances) {
 			isComplete[handlerCounter] = tempHandler.printOutLogs(tempList, count);
+			if (!isComplete[handlerCounter]) break;
 			handlerCounter++;
 		}
 		return isComplete;
@@ -106,16 +100,16 @@ public class LogManager {
 		return printOut(handlerInstances, logInstances, -1);
 	}
 
+	public boolean[] printOut(int[] logInstances, int count) {
+		return printOut(Arrays.asList(activeLogHandler), logInstances, count);
+	}
+
 	public boolean[] printOut(List<LogHandler> handlerInstances, int count) {
 		return printOut(handlerInstances, new int[] { activeInstance.getId() }, count);
 	}
 
 	public boolean[] printOut(List<LogHandler> handlerInstances) {
 		return printOut(handlerInstances, -1);
-	}
-
-	public boolean printOut(int[] logInstances, int count) {
-		return printOut(Arrays.asList(activeLogHandler), logInstances, count)[0];
 	}
 
 	public boolean printOut(int[] instances) {
@@ -127,7 +121,8 @@ public class LogManager {
 	}
 
 	public boolean printOut() {
-		return printOut(Arrays.asList(activeLogHandler), new int[] { activeInstance.getId() }, -1)[0];
+		return printOut(Arrays.asList(activeLogHandler), new int[] { activeInstance.getId() },
+				activeInstance.getLogList().size())[0];
 	}
 	// PRINT OUT/////////////////////////////////////////////////
 
@@ -151,9 +146,9 @@ public class LogManager {
 	public void removeLog(int count, int[] instances) {
 		for (int temp : instances) {
 			if (count == -1)
-				logInstances.get(temp).clearList();
+				this.logInstances.get(temp).clearList();
 			else
-				logInstances.get(temp).removeLog(count);
+				this.logInstances.get(temp).removeLog(count);
 		}
 	}
 
@@ -171,36 +166,20 @@ public class LogManager {
 	// REMOVE LOG////////////////////////////////////////////////
 
 	// GETTER SETTERS////////////////////////////////////////////
-	public void setActiveLogInstance(LogInstance logInstance) {
-		this.activeInstance = logInstance;
+	public void setActiveLogInstance(int instanceId) {
+		this.activeInstance = logInstances.get(instanceId);
 	}
 
 	public int getActiveLogInstance() {
 		return this.activeInstance.getId();
 	}
 
-	public void setActiveLogHandler(LogHandler logHandler) {
+	public void setLogHandler(LogHandler logHandler) {
 		this.activeLogHandler = logHandler;
 	}
 
-	public LogHandler getActiveLogHandler() {
+	public LogHandler getLogHandler() {
 		return this.activeLogHandler;
-	}
-
-	public SimpleDateFormat getDateFormat() {
-		return dateFormat;
-	}
-
-	public void setDateFormat(SimpleDateFormat newFormat) {
-		dateFormat = newFormat;
-	}
-	
-	public int getActiveLoggingLevel() {
-		return this.activeLoggingLevel;
-	}
-	
-	public void setActiveLoggingLevel(int activeLoggingLevel) {
-		this.activeLoggingLevel=activeLoggingLevel;
 	}
 	// GETTER SETTERS////////////////////////////////////////////
 }
