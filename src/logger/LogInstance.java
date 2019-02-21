@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class LogInstance {
-	protected static int listCounter = 0;
+	private static int listCounter = 0;
 	private String instanceName;
 	private LinkedList<LogObject> logList = new LinkedList<LogObject>();
 	private int listId;
@@ -74,5 +74,13 @@ public class LogInstance {
 
 	public void clearInstance() {
 		this.logList.clear();
+	}
+
+	public boolean isInstanceEmpty() {
+		if (logList.size() == 0) {
+			return true;
+		}
+		else
+			return false;
 	}
 }

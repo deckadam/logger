@@ -9,19 +9,14 @@ import java.util.regex.Pattern;
 public class LogHandlerFileOutput extends LogHandler {
 	private String outputPath;
 	private String outputFileName;
-	private boolean useInstanceNameIfExists;
 
-	public LogHandlerFileOutput() {
+	public LogHandlerFileOutput(boolean isPrintOnAtRelease) {
 		this(System.getProperty("user.home") + "//logOutputs//", "defaultFileName.txt");
-	}
-
-	public LogHandlerFileOutput(String outputPath, boolean useInstanceNameIfExists) {
-		this.outputPath = outputPath;
-		this.useInstanceNameIfExists = useInstanceNameIfExists;
+		super.setPrintOnAtRelease(isPrintOnAtRelease);
 	}
 
 	public LogHandlerFileOutput(String outputPath) {
-		this(outputPath, "defaultFileName.txt");
+		this(outputPath, "defaultFileName");
 	}
 
 	public LogHandlerFileOutput(String outputPath, String fileName) {
@@ -31,6 +26,8 @@ public class LogHandlerFileOutput extends LogHandler {
 
 	@Override
 	public boolean printOutLogs(List<LogInstance> logInstances, int count) {
+		boolean[] results = new boolean[logInstances.size()];
+		int resultCounter = 0;
 		for (LogInstance tempInstance : logInstances) {
 			StringBuilder temp = new StringBuilder();
 			tempInstance.getLogs(temp, getLogFormatter(), count);
@@ -43,24 +40,30 @@ public class LogHandlerFileOutput extends LogHandler {
 					temp.getChars(i, aPosEnd, aChars, 0);
 					bw.write(aChars, 0, aPosEnd - i);
 				}
-				return true;
+				results[resultCounter++] = true;
 			}
 			catch (IOException e) {
 				e.printStackTrace();
 				logger.handleException(e);
 				useAlternativeHandler(logInstances, count, getLogFormatter());
+				results[resultCounter++] = true;
 			}
 		}
-		return false;
+		for (boolean temp : results) {
+			if (!temp)
+				return false;
+		}
+
+		return true;
 	}
 
+	private int counter = 0;
+
 	private BufferedWriter createWriter(String fileName) throws IOException {
-		if (useInstanceNameIfExists && fileName != null && !fileName.equals("")) {
+		if (fileName != null && !fileName.equals(""))
 			return new BufferedWriter(new FileWriter(outputPath + checkExtension(fileName)));
-		}
-		else {
-			return new BufferedWriter(new FileWriter(outputPath + checkExtension(outputFileName)));
-		}
+		else
+			return new BufferedWriter(new FileWriter(outputPath + checkExtension(outputFileName + "-" + counter++)));
 	}
 
 	private String checkExtension(String inputName) {
@@ -87,13 +90,5 @@ public class LogHandlerFileOutput extends LogHandler {
 
 	public void setOutputFileName(String outputFileName) {
 		this.outputFileName = outputFileName;
-	}
-
-	public boolean isUseInstanceNameIfExists() {
-		return useInstanceNameIfExists;
-	}
-
-	public void setUseInstanceNameIfExists(boolean useInstanceNameIfExists) {
-		this.useInstanceNameIfExists = useInstanceNameIfExists;
 	}
 }

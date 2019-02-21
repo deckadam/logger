@@ -13,25 +13,21 @@ public class TestClass {
 
 	public void start() {
 		LogManager logger = LogManager.getInstance(true);
-		logger.setCreateLogsOutOfDebugMode(true);
 
-		LogFormatter formatter = new LogFormatter("l,sc,sm,m,d,fn,ln,mn");
-		LogInstance logInstance = new LogInstance("example");
+		LogFormatter formatter = new LogFormatter("l,sc,sm,m,d,fn,ln,c,mn");
+		LogInstance logInstance = new LogInstance();
+		LogInstance logInstance2 = new LogInstance("text");
+		LogInstance exceptionInstance = new LogInstance();
 
-		LogHandlerFileOutput alternativeHandler = new LogHandlerFileOutput(
-				"C:\\Users\\mete han çetin\\Desktop\\logs\\");
-		alternativeHandler.setLogFormatter(formatter);
-		alternativeHandler.setPrintOutOfDebugMode(true);
-		alternativeHandler.setUseInstanceNameIfExists(true);
+		LogHandlerFileOutput fileHandler = new LogHandlerFileOutput("C:\\Users\\mete han çetin\\Desktop\\logs\\");
+		fileHandler.setLogFormatter(formatter);
 
 		LogHandler consoleHandler = new LogHandlerConsole(System.out, true);
-		consoleHandler.setAlternativeHandler(alternativeHandler);
+		consoleHandler.setAlternativeHandler(fileHandler);
 		consoleHandler.setLogFormatter(formatter);
 		consoleHandler.setUseAlternativeHandlerOnError(true);
-		consoleHandler.setPrintOutOfDebugMode(false);
-
-		logger.addLogHandlerToHook(consoleHandler);
-		logger.addLogHandlerToHook(alternativeHandler);
+		logger.setExceptionHandler(consoleHandler);
+		logger.setExceptionInstance(exceptionInstance);
 		logger.addLogInstance(logInstance);
 
 		logger.setActiveLoggingLevel(LogLevels.DEBUG);
@@ -40,12 +36,14 @@ public class TestClass {
 		logger.createLog("FOR DELETE2", LogLevels.WARN);
 		logger.createLog("FOR DELETE3", LogLevels.ERROR);
 		logInstance.removeFromBottom(-2);
-
-		logger.handleException(new Exception("test exception"));
-		logger.printOut(Arrays.asList(consoleHandler, alternativeHandler));
+		Throwable e = new Throwable("IOException");
+		logger.handleException(new Exception("test exception", e));
+		logger.printExceptions();
+		logger.printOut(Arrays.asList(consoleHandler, fileHandler), new LogInstance[] { logInstance, logInstance2 });
 	}
 
 	public static void main(String[] args) {
+
 		TestClass t = new TestClass();
 		t.start();
 	}

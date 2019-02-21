@@ -4,7 +4,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 public abstract class LogHandler {
-	private boolean printOutOfDebugMode;
+	protected boolean printableAtReleaseMode;
 	private OutputStream handlerWriteStream;
 	private LogHandler alterativeHandler;
 	private boolean useAlternativeHandlerOnError = false;
@@ -43,12 +43,12 @@ public abstract class LogHandler {
 		this.handlerWriteStream = newStream;
 	}
 
-	public void setPrintOutOfDebugMode(boolean val) {
-		this.printOutOfDebugMode = val;
+	public boolean isPrintOnAtRelease() {
+		return printableAtReleaseMode;
 	}
 
-	protected boolean isPrintModeOn() {
-		return LogManager.getDebugMode() || printOutOfDebugMode;
+	public void setPrintOnAtRelease(boolean isPrintOnAtRelease) {
+		this.printableAtReleaseMode = isPrintOnAtRelease;
 	}
 
 	protected void useAlternativeHandler(List<LogInstance> logInstances, int count, LogFormatter formatter) {

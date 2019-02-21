@@ -9,6 +9,7 @@ public class LogFormatter {
 	// fn stands for fileName
 	// mn stands for module name
 	// ln stands for line number
+	// c stands for cause
 	private String format = "l,sc,sm,m,d,f";
 	private String formatDivider = ",";
 	private String standardFormat = "l,sc,sm,m,d,f";
@@ -86,6 +87,9 @@ public class LogFormatter {
 			case "ln":
 				outputArray[i] = getValue(log.getLineNumber(), i);
 				break;
+			case "c":
+				outputArray[i] = getValue(log.getCause(), i);
+				break;
 			}
 		}
 		String result = "";
@@ -122,12 +126,14 @@ public class LogFormatter {
 	}
 
 	private boolean doDivide(int i, int length, String nextVal) {
-		if (i != 0 && i != length - 1 && isNull(nextVal)) return true;
+		if (i != 0 && i != length - 1 && isNull(nextVal))
+			return true;
 		return false;
 	}
 
 	private boolean doDivide(int i, int length, int nextVal) {
-		if (i != 0 && i != length - 1 && isNull(nextVal)) return true;
+		if (i != 0 && i != length - 1 && isNull(nextVal))
+			return true;
 		return false;
 	}
 

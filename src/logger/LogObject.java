@@ -8,10 +8,11 @@ public class LogObject {
 	private String date;
 	private String fileName;
 	private String moduleName;
+	private String cause;
 	private int lineNumber;
 
 	protected LogObject(String message, String senderClass, String senderMethod, int level, String date,
-			String fileName, String moduleName, int lineNumber) {
+			String fileName, String moduleName,String cause, int lineNumber) {
 		this(message, senderClass, senderMethod, level, date);
 		this.fileName = fileName;
 		this.moduleName = moduleName;
@@ -31,6 +32,10 @@ public class LogObject {
 		this.senderMethod = senderMethod;
 		this.senderClass = senderClass;
 		this.lineNumber = -1;
+	}
+
+	public String getCause() {
+		return cause;
 	}
 
 	protected String getMessage() {
