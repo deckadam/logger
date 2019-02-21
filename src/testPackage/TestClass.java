@@ -3,29 +3,32 @@ package testPackage;
 import logger.LogFormatter;
 import logger.LogHandler;
 import logger.LogHandlerConsole;
+import logger.LogHandlerFileOutput;
 import logger.LogLevels;
 import logger.LogManager;
 import logger.LogInstance;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 
 public class TestClass {
 
-	private int instanceCounter = 0;
-
 	public void start() {
 		LogManager logger = LogManager.getInstance(true);
-		LogHandler consoleHandler = new LogHandlerConsole(System.out);
-		LogFormatter formatter = new LogFormatter("l,sc,sm,m,d");
-		LogInstance logInstance = new LogInstance(instanceCounter++);
-		LogHandler alternativeHandler = new LogHandlerConsole(System.err);
+		logger.setCreateLogsOutOfDebugMode(true);
 
+		LogFormatter formatter = new LogFormatter("l,sc,sm,m,d,fn,ln,mn");
+		LogInstance logInstance = new LogInstance("example");
+
+		LogHandlerFileOutput alternativeHandler = new LogHandlerFileOutput(
+				"C:\\Users\\mete han çetin\\Desktop\\logs\\");
+		alternativeHandler.setLogFormatter(formatter);
+		alternativeHandler.setPrintOutOfDebugMode(true);
+		alternativeHandler.setUseInstanceNameIfExists(true);
+
+		LogHandler consoleHandler = new LogHandlerConsole(System.out, true);
 		consoleHandler.setAlternativeHandler(alternativeHandler);
 		consoleHandler.setLogFormatter(formatter);
 		consoleHandler.setUseAlternativeHandlerOnError(true);
-		alternativeHandler.setLogFormatter(formatter);
+		consoleHandler.setPrintOutOfDebugMode(false);
 
 		logger.addLogHandlerToHook(consoleHandler);
 		logger.addLogHandlerToHook(alternativeHandler);
@@ -33,44 +36,18 @@ public class TestClass {
 
 		logger.setActiveLoggingLevel(LogLevels.DEBUG);
 		logger.createLog("heloooo");
-		
 		logger.createLog("FOR DELETE1");
 		logger.createLog("FOR DELETE2", LogLevels.WARN);
 		logger.createLog("FOR DELETE3", LogLevels.ERROR);
-		logInstance.removeLog(1);
+		logInstance.removeFromBottom(-2);
 
-		logger.printOut();
-
-	}
-
-	public void test() {
-		List<Integer> testList = new ArrayList<Integer>();
-
-		for (int x = 0; x < 500000; x++) {
-			testList.add(x);
-		}
-
-		List<Integer> tempList = new ArrayList<>(testList);
-
-		long start = System.nanoTime();
-		for (int x = 0; x < 500000; x++) {
-			tempList.remove(0);
-		}
-		long end = System.nanoTime();
-		System.out.println(end - start);
-		Iterator<Integer> itr = testList.iterator();
-		start = System.nanoTime();
-		while (itr.hasNext()) {
-			itr.next();
-			itr.remove();
-		}
-		end = System.nanoTime();
-
-		System.out.println(end - start);
+		logger.handleException(new Exception("test exception"));
+		logger.printOut(Arrays.asList(consoleHandler, alternativeHandler));
 	}
 
 	public static void main(String[] args) {
 		TestClass t = new TestClass();
 		t.start();
 	}
+
 }

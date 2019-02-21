@@ -6,8 +6,19 @@ public class LogObject {
 	private String senderMethod;
 	private String level;
 	private String date;
+	private String fileName;
+	private String moduleName;
+	private int lineNumber;
 
-	protected LogObject(String message, String senderClass, String senderMethod, int level,String date) {
+	protected LogObject(String message, String senderClass, String senderMethod, int level, String date,
+			String fileName, String moduleName, int lineNumber) {
+		this(message, senderClass, senderMethod, level, date);
+		this.fileName = fileName;
+		this.moduleName = moduleName;
+		this.lineNumber = lineNumber;
+	}
+
+	protected LogObject(String message, String senderClass, String senderMethod, int level, String date) {
 		if (level < 1 || level > 6) throw new IllegalArgumentException("Unknown log level");
 		if (level == LogLevels.TRACE) this.level = "TRACE";
 		if (level == LogLevels.DEBUG) this.level = "DEBUG";
@@ -19,6 +30,7 @@ public class LogObject {
 		this.message = message;
 		this.senderMethod = senderMethod;
 		this.senderClass = senderClass;
+		this.lineNumber = -1;
 	}
 
 	protected String getMessage() {
@@ -39,6 +51,18 @@ public class LogObject {
 
 	protected String getDate() {
 		return this.date;
+	}
+
+	protected String getFileName() {
+		return this.fileName;
+	}
+
+	protected String getModuleName() {
+		return this.moduleName;
+	}
+
+	protected int getLineNumber() {
+		return this.lineNumber;
 	}
 
 }

@@ -1,19 +1,15 @@
 package logger;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class LogInstance {
-	private List<LogObject> logList = new ArrayList<LogObject>();
+	protected static int listCounter = 0;
+	private String instanceName;
+	private LinkedList<LogObject> logList = new LinkedList<LogObject>();
 	private int listId;
-
-	public LogInstance(int index) {
-		this.listId = index;
-	}
-
-	public void clearInstance() {
-		this.logList.clear();
+	{
+		this.listId = listCounter++;
 	}
 
 	protected void addToInstance(LogObject data) {
@@ -21,12 +17,18 @@ public class LogInstance {
 	}
 
 	public void removeFromBottom(int count) {
-		Iterator<LogObject> itr = logList.iterator();
-		while (itr.hasNext() && count > 0) {
-			itr.next();
-			itr.remove();
-			count--;
-		}
+		if (checkValidity(count))
+			for (int x = 0; x < count; x++) {
+				logList.removeFirst();
+			}
+
+	}
+
+	public void removeLast(int count) {
+		if (checkValidity(count))
+			for (int x = 0; x < count; x++) {
+				logList.removeLast();
+			}
 	}
 
 	protected void getLogs(StringBuilder stringBuilder, LogFormatter formatter, int count) {
@@ -38,9 +40,39 @@ public class LogInstance {
 		for (LogObject temp : tempList) {
 			stringBuilder.append(formatter.getFormattedLog(temp) + LogManager.lineSeparator);
 		}
+
+	}
+
+	private boolean checkValidity(int count) {
+		if (count > 0 || count > logList.size()) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 
 	protected int getId() {
 		return listId;
+	}
+
+	public String getInstanceName() {
+		return this.instanceName;
+	}
+
+	public void setInstanceName(String instanceName) {
+		this.instanceName = instanceName;
+	}
+
+	public LogInstance() {
+		this(null);
+	}
+
+	public LogInstance(String instanceName) {
+		this.instanceName = instanceName;
+	}
+
+	public void clearInstance() {
+		this.logList.clear();
 	}
 }

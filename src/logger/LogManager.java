@@ -5,6 +5,7 @@ import logger.LogObject;
 import logger.LogInstance;
 
 import java.util.List;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,43 +13,75 @@ import java.util.Date;
 
 public class LogManager {
 	private static LogManager instance;
-	public final boolean DEBUG;
+	private static boolean DEBUG;
+	private boolean createLogsOutOfDebugMode;
 
 	static {
 		lineSeparator = System.lineSeparator();
 		dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:MM:ss");
 	}
 
+	public static LogManager getInstance() {
+		return getInstance(DEBUG);
+	}
+
 	public static LogManager getInstance(boolean mode) {
-		if (null == instance) { return new LogManager(mode); }
+		if (null == instance) {
+			return new LogManager(mode);
+		}
 		return instance;
 	}
 
 	private LogManager(boolean mode) {
-		this.DEBUG = mode;
+		DEBUG = mode;
 	}
-
 
 	protected static SimpleDateFormat dateFormat;
 	protected static final String lineSeparator;
-	
+
 	private LogHandler activeLogHandler;
 	private LogInstance activeInstance;
 	private int activeLoggingLevel = -1;
-	
+
 	private List<LogInstance> logInstances = new ArrayList<LogInstance>();
 	private List<LogHandler> logHandlers = new ArrayList<LogHandler>();
 
 	public void addLogInstance(LogInstance newInstance) {
 		if (null != newInstance) {
 			logInstances.add(newInstance);
-			if (activeInstance == null) activeInstance = newInstance;
+			if (activeInstance == null)
+				activeInstance = newInstance;
 		}
 	}
 
+	// EXCEPTION HANDLER//////////////////////////////////////////
+	public void handleException(Exception e, LogInstance[] instances) {
+		StackTraceElement[] resource = e.getStackTrace();
+		for (StackTraceElement element : resource) {
+			String className = element.getClassName();
+			if (!className.equals(this.getClass().getClass().getName())) {
+				String fileName = element.getFileName();
+				String methodName = element.getMethodName();
+				String moduleName = element.getModuleName();
+				int lineNumber = element.getLineNumber();
+				Date date = new Date();
+				for (LogInstance instance : instances) {
+					instance.addToInstance(new LogObject(e.getMessage(), className, methodName, LogLevels.ERROR,
+							dateFormat.format(date), fileName, moduleName, lineNumber));
+				}
+			}
+		}
+	}
+
+	public void handleException(Exception e) {
+		handleException(e, new LogInstance[] { activeInstance });
+	}
+	// EXCEPTION HANDLER//////////////////////////////////////////
+
 	// HANDLER HOOK///////////////////////////////////////////////
 	public void addLogHandlerToHook(LogHandler logHandler) {
-		if (activeLogHandler == null) this.activeLogHandler = logHandler;
+		if (activeLogHandler == null)
+			this.activeLogHandler = logHandler;
 		logHandlers.add(logHandler);
 	}
 
@@ -69,25 +102,28 @@ public class LogManager {
 	}
 	// HANDLER HOOK///////////////////////////////////////////////
 
-	// CREATE LOG////////////////////////////////////////////////
-	public void createLog(String logText, int logLevel, int[] instances) {
-		this.activeLoggingLevel = logLevel;
-		StackTraceElement[] currentStack = Thread.currentThread().getStackTrace();
-		String callerClassName = currentStack[currentStack.length - 1].getClassName();
-		String callerMethodName = currentStack[3].getMethodName();
-		Date date = new Date();
-		LogObject temp = new LogObject(logText, callerClassName, callerMethodName, logLevel, dateFormat.format(date));
-		for (int instanceTemp : instances) {
-			logInstances.get(instanceTemp).addToInstance(temp);
+	// CREATE LOG/////////////////////////////////////////////////
+	public void createLog(String logText, int logLevel, LogInstance[] instances) {
+		if (DEBUG || createLogsOutOfDebugMode) {
+			this.activeLoggingLevel = logLevel;
+			StackTraceElement[] currentStack = Thread.currentThread().getStackTrace();
+			String callerClassName = currentStack[currentStack.length - 1].getClassName();
+			String callerMethodName = currentStack[currentStack.length - 1].getMethodName();
+			Date date = new Date();
+			LogObject temp = new LogObject(logText, callerClassName, callerMethodName, logLevel,
+					dateFormat.format(date));
+			for (LogInstance instanceTemp : instances) {
+				instanceTemp.addToInstance(temp);
+			}
 		}
 	}
 
 	public void createLog(String logText, int logLevel) {
-		createLog(logText, logLevel, new int[] { activeInstance.getId() });
+		createLog(logText, logLevel, new LogInstance[] { activeInstance });
 	}
 
 	public void createLog(String logText) {
-		createLog(logText, activeLoggingLevel, new int[] { activeInstance.getId() });
+		createLog(logText, activeLoggingLevel, new LogInstance[] { activeInstance });
 	}
 	// CREATE LOG////////////////////////////////////////////////
 
@@ -135,45 +171,6 @@ public class LogManager {
 	}
 	// PRINT OUT/////////////////////////////////////////////////
 
-	// FLUSH LOG INSTANCE////////////////////////////////////////
-	public void flushLogInstances(int[] indexes) {
-		for (int temp : indexes) {
-			logInstances.get(temp).clearInstance();
-		}
-	}
-
-	public void flushLogInstance(int index) {
-		flushLogInstances(new int[] { index });
-	}
-
-	public void flushLogInstance() {
-		if (activeInstance != null) flushLogInstances(new int[] { activeInstance.getId() });
-	}
-	// FLUSH LOG INSTANCE////////////////////////////////////////
-
-	// REMOVE LOG////////////////////////////////////////////////
-	public void removeLog(int count, int[] instances) {
-		for (int temp : instances) {
-			if (count == -1)
-				logInstances.get(temp).clearInstance();
-			else
-				logInstances.get(temp).removeLog(count);
-		}
-	}
-
-	public void removeLog(int[] instances) {
-		removeLog(1, instances);
-	}
-
-	public void removeLog(int count) {
-		removeLog(count, new int[] { activeInstance.getId() });
-	}
-
-	public void removeLog() {
-		removeLog(1, new int[] { activeInstance.getId() });
-	}
-	// REMOVE LOG////////////////////////////////////////////////
-
 	// GETTER SETTERS////////////////////////////////////////////
 	public void setActiveLogInstance(LogInstance logInstance) {
 		this.activeInstance = logInstance;
@@ -205,6 +202,18 @@ public class LogManager {
 
 	public void setActiveLoggingLevel(int activeLoggingLevel) {
 		this.activeLoggingLevel = activeLoggingLevel;
+	}
+
+	public static boolean getDebugMode() {
+		return DEBUG;
+	}
+
+	public boolean isCreateLogsOutOfDebugMode() {
+		return createLogsOutOfDebugMode;
+	}
+
+	public void setCreateLogsOutOfDebugMode(boolean createLogsOutOfDebugMode) {
+		this.createLogsOutOfDebugMode = createLogsOutOfDebugMode;
 	}
 	// GETTER SETTERS////////////////////////////////////////////
 }
